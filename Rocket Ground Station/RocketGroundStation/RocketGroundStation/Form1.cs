@@ -159,9 +159,7 @@ namespace RocketGroundStation
                         // 2. Struct'a dönüştür ve UI'ı güncelle
                         RocketDataPacket packet = ByteArrayToStruct(payload);
 
-                        //this.Invoke(new Action(() => {
-                        //    UpdateUI(packet);
-                        //}));
+                        UpdateUI(packet);
 
                         //// Bağımsız görevleri tetikle
                         //Task.Run(() => Update2DMap(packet.lat.ToString(), packet.lon.ToString()));
@@ -170,6 +168,34 @@ namespace RocketGroundStation
                     // döngü başa döner ve bir sonraki 151'i aramaya başlar.
                 }
             }
+        }
+        private void UpdateUI(RocketDataPacket packet)
+        {
+            // UI iş parçacığına (Thread) güvenli erişim sağlıyoruz
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => UpdateUI(packet)));
+                return;
+            }
+
+            // Değerleri Label'lara yazdırıyoruz. 
+            // "F2" noktadan sonra 2 basamak gösterir.
+            lblBaroAlt.Text = packet.baroAlt.ToString("F2") + " m";
+            lblGpsAlt.Text = packet.gpsAlt.ToString("F2") + " m";
+            lblLat.Text = packet.lat.ToString("F6"); // GPS için 6 basamak daha iyidir
+            lblLon.Text = packet.lon.ToString("F6");
+
+            lblAccelX.Text = packet.accelX.ToString("F2");
+            lblAccelY.Text = packet.accelY.ToString("F2");
+
+            lblGyroX.Text = packet.gyroX.ToString("F2");
+            lblGyroY.Text = packet.gyroY.ToString("F2");
+            lblGyroZ.Text = packet.gyroZ.ToString("F2");
+
+            lblSpeed.Text = packet.speed.ToString("F2") + " m/s";
+
+            // Durum (Status) bilgisi için küçük bir kontrol
+            //lblStatus.Text = packet.status.ToString("F2");
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
@@ -231,6 +257,11 @@ namespace RocketGroundStation
             }
 
             LogToConsole("Port listesi güncellendi. Bulunan port sayısı: " + ports.Length);
+        }
+
+        private void lblAccelXTxt_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

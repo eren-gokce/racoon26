@@ -1,13 +1,13 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\",
+  "WorkspaceRootPath": "C:\\Users\\ErenG\\Documents\\GitHub\\racoon26\\Rocket Ground Station\\RocketGroundStation\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{D9725E8B-8209-428C-9CD2-C4C49B19D80B}|RocketGroundStation\\RocketGroundStation.csproj|C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\rocketgroundstation\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "AbsoluteMoniker": "D:0:0:{D9725E8B-8209-428C-9CD2-C4C49B19D80B}|RocketGroundStation\\RocketGroundStation.csproj|c:\\users\\ereng\\documents\\github\\racoon26\\rocket ground station\\rocketgroundstation\\rocketgroundstation\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{D9725E8B-8209-428C-9CD2-C4C49B19D80B}|RocketGroundStation\\RocketGroundStation.csproj|solutionrelative:rocketgroundstation\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{D9725E8B-8209-428C-9CD2-C4C49B19D80B}|RocketGroundStation\\RocketGroundStation.csproj|c:\\users\\ereng\\desktop\\rocket ground station\\rocketgroundstation\\rocketgroundstation\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{D9725E8B-8209-428C-9CD2-C4C49B19D80B}|RocketGroundStation\\RocketGroundStation.csproj|c:\\users\\ereng\\documents\\github\\racoon26\\rocket ground station\\rocketgroundstation\\rocketgroundstation\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{D9725E8B-8209-428C-9CD2-C4C49B19D80B}|RocketGroundStation\\RocketGroundStation.csproj|solutionrelative:rocketgroundstation\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -24,9 +24,9 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "Form1.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\Form1.cs",
+              "DocumentMoniker": "C:\\Users\\ErenG\\Documents\\GitHub\\racoon26\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\Form1.cs",
               "RelativeDocumentMoniker": "RocketGroundStation\\Form1.cs",
-              "ToolTip": "C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\Form1.cs [Design]",
+              "ToolTip": "C:\\Users\\ErenG\\Documents\\GitHub\\racoon26\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\Form1.cs [Design]",
               "RelativeToolTip": "RocketGroundStation\\Form1.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-22T13:37:26.861Z",
@@ -53,14 +53,13 @@
               "$type": "Document",
               "DocumentIndex": 1,
               "Title": "Form1.cs",
-              "DocumentMoniker": "C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\Form1.cs",
+              "DocumentMoniker": "C:\\Users\\ErenG\\Documents\\GitHub\\racoon26\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\Form1.cs",
               "RelativeDocumentMoniker": "RocketGroundStation\\Form1.cs",
-              "ToolTip": "C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\Form1.cs",
+              "ToolTip": "C:\\Users\\ErenG\\Documents\\GitHub\\racoon26\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\Form1.cs",
               "RelativeToolTip": "RocketGroundStation\\Form1.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAADEAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAKsAAAAAAAAAAIA6wMIAAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-22T13:53:00.513Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-22T13:53:00.513Z"
             }
           ]
         }

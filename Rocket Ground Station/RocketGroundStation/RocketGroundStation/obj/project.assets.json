@@ -1724,11 +1724,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\RocketGroundStation.csproj",
+      "projectUniqueName": "C:\\Users\\ErenG\\Documents\\GitHub\\racoon26\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\RocketGroundStation.csproj",
       "projectName": "RocketGroundStation",
-      "projectPath": "C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\RocketGroundStation.csproj",
+      "projectPath": "C:\\Users\\ErenG\\Documents\\GitHub\\racoon26\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\RocketGroundStation.csproj",
       "packagesPath": "C:\\Users\\ErenG\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ErenG\\Desktop\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\obj\\",
+      "outputPath": "C:\\Users\\ErenG\\Documents\\GitHub\\racoon26\\Rocket Ground Station\\RocketGroundStation\\RocketGroundStation\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

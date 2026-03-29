@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RocketGroundStation")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+53149f58b7115673a64386a3ee469fecd56b2841")]
 [assembly: System.Reflection.AssemblyProductAttribute("RocketGroundStation")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RocketGroundStation")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
