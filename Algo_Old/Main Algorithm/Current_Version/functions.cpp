@@ -18,6 +18,10 @@ float yukseklikraw; //m_n[0]
 float yukseklik; // m_n[0] - yukseklikraw
 float hiz; // m_n[1]
 float ivme; // m_n[2]
+//acceleration degerleri
+float accel_x;
+float accel_y;
+float accel_z;
 //ypr değerleri
 float yaw;
 float pitch;
@@ -47,7 +51,6 @@ void kalkis(){
     flag = 1;
     EEPROM.write(0, flag); //veriyi flaha yaz
     EEPROM.commit();  // veriyi kalicilastir
-    setBit(0);
   }
 }
 
@@ -62,7 +65,6 @@ void burnout(){
     flag = 2;
     EEPROM.write(0, flag); //veriyi flaha yaz
     EEPROM.commit();  // veriyi kalicilastir
-    setBit(1);
   }
 }
 
@@ -78,8 +80,6 @@ void apogee(){
     EEPROM.commit();  // veriyi kalicilastir
     digitalWrite(SURUKLENME_PARASUT_PIN, HIGH);
     status = 2;
-    setBit(4);
-    setBit(5);
   }
 }
 
@@ -122,8 +122,6 @@ void parasut(){// zeminden yuksekligin hesaplanmasi lazim
     EEPROM.commit();  // veriyi kalicilastir
     digitalWrite(ANA_PARASUT_PIN, HIGH);
     status = 4;
-    setBit(6);
-    setBit(7);
   }
 
 }

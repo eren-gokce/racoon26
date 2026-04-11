@@ -11,9 +11,6 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define RS232_RX_PIN 44//44
-#define RS232_TX_PIN 43//43
-
 /*
   Switch acik oldugu zaman flashtaki veri okunacak
   kapaliysa ilk acis
@@ -29,7 +26,6 @@ unsigned long lora_timer;
 volatile bool switch_state = LOW; // flag icin switch
 
 //diger nesneler
-HardwareSerial  RS232Serial(0);
 HardwareSerial  SerialAT(2);
 LoRa_E32        e32ttl(&SerialAT);
 HardwareSerial  gpsSW(1);
@@ -38,8 +34,6 @@ TinyGPSPlus     gps;
 // Sensör nesneleri
 Adafruit_BMP280 bmp(&Wire1);
 MPU6050 mpu;
-
-
 
 #pragma region timer starts timer after 10s and yukseklik
 #include <Ticker.h>
@@ -219,7 +213,6 @@ void kalmanFilter_modified(float alt_meas, float accel_meas) {
 
 void setup() {
   Serial.begin(115200);
-  RS232Serial.begin(115200, SERIAL_8N1, RS232_RX_PIN, RS232_TX_PIN);
   SerialAT.begin(9600, SERIAL_8N1, LORA_RX, LORA_TX); //lora ve gps
   Wire.begin(MPU_SDA, MPU_SCL);
   Wire1.begin(BMP_SDA, BMP_SCL);
@@ -310,7 +303,7 @@ void setup() {
   lora_timer = millis();
 
 
-  esp_task_wdt_config_t twdt_config = { // task watchdog configuraiton
+  esp_task_wdt_config_t twdt_config = { // task watch         g configuraiton
     .timeout_ms = 3000, // 3 saniye içinde resetlenmeli
     .idle_core_mask = 0, // idle task izlenmiyor
     .trigger_panic = true
@@ -318,217 +311,135 @@ void setup() {
 
   esp_task_wdt_init(&twdt_config); // Watchdog’u başlat
   esp_task_wdt_add(NULL);          // Mevcut görev (loop task) TWDT’ye abone edildi
-
-  scenario = 0;
 }
 
-// float a;
-// float b;
-// float c;
-// float d;
-// float e;
 void loop() {  
-
-
-  /*
-  if ( sit test verisi) {
-    scenario = 1;
-  }
-  else if (sut test verisi) {
-    scenario = 2;
-  }
-  else {
-    scenario = 0;
-  }
-  */
-
 
   float altitude;
 
+  // if (!DMPReady) return;
+  // MPU6050'dan verileri oku (sadece vertical ivme için)
+  if (mpu.dmpGetCurrentFIFOPacket(FIFOBuffer)) { 
+    mpu.dmpGetQuaternion(&q, FIFOBuffer);
+    // --- YAZILIMSAL SENSÖR DÖNDÜRME İŞLEMİ BAŞLANGICI ---
+    // Quaternion değerlerini geçici değişkenlere alıyoruz
+    float qw = q.w;
+    float qx = q.x;
+    float qy = q.y;
+    float qz = q.z;
+    float sq2 = 0.70710678f; // Kök(2)/2 değeri (Matematiksel 90 derece dönüş sabiti)
 
-  // while (Serial.available()) {
-  // uint8_t incomingByte = Serial.read();  // gelen byte'ı al
-  // fifoPush(incomingByte);
-  // }
+    // KARTINIZIN NASIL TAKILDIĞINA GÖRE AŞAĞIDAKİLERDEN SADECE BİRİNİ SEÇİN:
+
+    /* DURUM 1: Sensör Y ekseni etrafında 90 derece dönükse 
+      (Örn: Kart dik takılmış, Z ekseni yukarı değil ileri bakıyor) */
+    q.w = sq2 * (qw - qy);
+    q.x = sq2 * (qx - qz);
+    q.y = sq2 * (qw + qy);
+    q.z = sq2 * (qx + qz);
+
+    /* DURUM 2: Sensör X ekseni etrafında 90 derece dönükse 
+      (Örn: Kart diğer yönde dik takılmış) */
+    // q.w = sq2 * (qw - qx);
+    // q.x = sq2 * (qw + qx);
+    // q.y = sq2 * (qy + qz);
+    // q.z = sq2 * (qz - qy);
+
+    /* DURUM 3: Sensör Z ekseni etrafında 90 derece dönükse 
+      (Örn: Kart yatay ama ileri değil, sağa/sola bakıyor) */
+    // q.w = sq2 * (qw - qz);
+    // q.x = sq2 * (qx + qy);
+    // q.y = sq2 * (qy - qx);
+    // q.z = sq2 * (qw + qz);
+
+    // Not: Eğer yönler tam tersi çıkarsa (90 yerine -90 gerekiyorsa), 
+    // formüllerdeki eksi (-) ve artı (+) işaretlerinin yerlerini değiştirin.
+    // --- YAZILIMSAL DÖNDÜRME İŞLEMİ BİTİŞİ ---
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity); // Bu satır eklendi, böylece ypr güncellenir.
+  }
   
-  switch(scenario){
-    case 0: // default
+  // BMP280'dan altimetre ölçümü (deniz seviyesi basıncı 1013.25 hPa)
+  altitude = bmp.readAltitude(1013.25);
+  // MPU6050'dan okunan vertical ivme: gravity.z (kontrol girişi olarak kullanılacak)
+  accel_x = gravity.x;
+  accel_y = gravity.y;
+  accel_z = gravity.z;
 
-      if (RS232Serial.available()) {
-        fifoPush(RS232Serial.read());
-      }
-      checkFifoHeader();
+  // Kalman filtresi uygulaması: altimetre ölçümü, kontrol girişi olarak accel_z
+  kalmanFilter_modified(altitude, accel_z);
 
-      // if (!DMPReady) return;
-      // MPU6050'dan verileri oku (sadece vertical ivme için)
-      if (mpu.dmpGetCurrentFIFOPacket(FIFOBuffer)) { 
-        mpu.dmpGetQuaternion(&q, FIFOBuffer);
-        mpu.dmpGetGravity(&gravity, &q);
-        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity); // Bu satır eklendi, böylece ypr güncellenir.
-      }
-      
-      // BMP280'dan altimetre ölçümü (deniz seviyesi basıncı 1013.25 hPa)
-      altitude = bmp.readAltitude(1013.25);
-      // MPU6050'dan okunan vertical ivme: gravity.z (kontrol girişi olarak kullanılacak)
-      accel_x = gravity.x;
-      accel_y = gravity.y;
-      accel_z = gravity.z;
+  //m_n[] lerin normal adlara esitlenmesi
+  yukseklik = m_n[0] - yukseklikraw;
+  hiz = m_n[1];
+  ivme = m_n[2];
 
-      // Kalman filtresi uygulaması: altimetre ölçümü, kontrol girişi olarak accel_z
-      kalmanFilter_modified(altitude, accel_z);
+  // Kalman filtresi sonuçları: m_n[0] = güncellenmiş altimetre, m_n[1] = hız, m_n[2] = ivme
+  // Serial.print(" | Altituderaw: "); Serial.print(yukseklikraw);
+  // Serial.print(" | Altitude: "); Serial.print(yukseklik);
+  // Serial.print(" | Speed: "); Serial.print(hiz);
+  // Serial.print(" | Accel: "); Serial.print(ivme);
 
-      //m_n[] lerin normal adlara esitlenmesi
-      yukseklik = m_n[0] - yukseklikraw;
-      hiz = m_n[1];
-      ivme = m_n[2];
-
-      // Kalman filtresi sonuçları: m_n[0] = güncellenmiş altimetre, m_n[1] = hız, m_n[2] = ivme
-      // Serial.print(" | Altituderaw: "); Serial.print(yukseklikraw);
-      // Serial.print(" | Altitude: "); Serial.print(yukseklik);
-      // Serial.print(" | Speed: "); Serial.print(hiz);
-      // Serial.print(" | Accel: "); Serial.print(ivme);
-
-      // Serial.print(" | Current Flag: "); Serial.println(flag);
+  // Serial.print(" | Current Flag: "); Serial.println(flag);
 
 
-      pitch = ypr[1];
-      roll = ypr[2];
-      yaw = ypr[0];
+  pitch = ypr[1];
+  roll = ypr[2];
+  yaw = ypr[0];
 
-      // MPU6050 açıları (Yaw, Pitch, Roll) seri yazdırma
-      //Serial.print("Yaw: "); Serial.print(ypr[0], 4);
-      //Serial.print(" | Pitch: "); Serial.print(ypr[1], 4);
-      //Serial.print(" | Roll: "); Serial.println(ypr[2], 4);
+  // MPU6050 açıları (Yaw, Pitch, Roll) seri yazdırma
+  //Serial.print("Yaw: "); Serial.print(ypr[0], 4);
+  //Serial.print(" | Pitch: "); Serial.print(ypr[1], 4);
+  //Serial.print(" | Roll: "); Serial.println(ypr[2], 4);
 
-      // Derece cinsinden açıları da yazdırma
-      yawDeg = ypr[0] * 180.0 / PI;
-      pitchDeg = ypr[1] * 180.0 / PI;
-      rollDeg = ypr[2] * 180.0 / PI;
-      //Serial.print("Yaw (°): "); Serial.print(yawDeg, 2);
-      //Serial.print(" | Pitch (°): "); Serial.print(pitchDeg, 2);
-      //Serial.print(" | Roll (°): "); Serial.println(rollDeg, 2);
+  // Derece cinsinden açıları da yazdırma
+  yawDeg = ypr[0] * 180.0 / PI;
+  pitchDeg = ypr[1] * 180.0 / PI;
+  rollDeg = ypr[2] * 180.0 / PI;
+  Serial.print("Yaw (°): "); Serial.print(yawDeg, 2);
+  Serial.print(" | Pitch (°): "); Serial.print(pitchDeg, 2);
+  Serial.print(" | Roll (°): "); Serial.println(rollDeg, 2);
 
-      millis_counter = millis() - millis_saved;
+  millis_counter = millis() - millis_saved;
 
-      // if (switch_state == HIGH){
-      //   Serial.print("switch is high and eeprom value is ");
-      //   int asd = EEPROM.read(0); // 0. byte'tan oku
-      //   Serial.println(asd);
-        
-      // }
-      // else if(switch_state == LOW){
-      //   Serial.println("switch is low");
-      // }
+  // if (switch_state == HIGH){
+  //   Serial.print("switch is high and eeprom value is ");
+  //   int asd = EEPROM.read(0); // 0. byte'tan oku
+  //   Serial.println(asd);
+    
+  // }
+  // else if(switch_state == LOW){
+  //   Serial.println("switch is low");
+  // }
 
-      call_lora();
+  call_lora();
 
-      write_to_sd();
+  write_to_sd();
 
-      switch(flag){
-        case 0:
-          kalkis();
-          break;
-        
-        case 1:
-          burnout();
-          break;
-
-        case 2:
-          apogee();
-          break;
-
-        case 3:
-          parasut_tekrarla(0/* 0: Suruklenme parasutu, 1: Ana parasut */);
-          break;
-
-        case 4:
-          parasut();
-          break;
-
-        case 5:
-          alcalma();
-          parasut_tekrarla(1/*;Ana parasut icin*/);
-          break;
-      }
-      
+  switch(flag){
+    case 0:
+      kalkis();
       break;
-    case 1: // sit test
-      if (RS232Serial.available()) {
-        fifoPush(RS232Serial.read());
-      }
-      checkFifoHeader();
-      
-      // if (!DMPReady) return;
-      // MPU6050'dan verileri oku (sadece vertical ivme için)
-      if (mpu.dmpGetCurrentFIFOPacket(FIFOBuffer)) { 
-        mpu.dmpGetQuaternion(&q, FIFOBuffer);
-        mpu.dmpGetGravity(&gravity, &q);
-        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity); // Bu satır eklendi, böylece ypr güncellenir.
-      }
-
-      altitude = bmp.readAltitude(1013.25);
-
-      accel_x = gravity.x * 9.81;
-      accel_y = gravity.y * 9.81;
-      accel_z = gravity.z;
-
-      kalmanFilter_modified(altitude, accel_z);
-
-      ivme = m_n[2] * 9.81;
-
-      pitch = ypr[1];
-      roll = ypr[2];
-      yaw = ypr[0];
-
-      yawDeg = ypr[0] * 180.0 / PI;
-      pitchDeg = ypr[1] * 180.0 / PI;
-      rollDeg = ypr[2] * 180.0 / PI;
-
-      sit();
+    
+    case 1:
+      burnout();
       break;
-    case 2: // sut test
-      sut();
 
-      yukseklikoldold = yukseklikold;
-      yukseklikold = yukseklik;
-      yukseklik = sut_yukseklik;
-      ivme = sut_ivme;
+    case 2:
+      apogee();
+      break;
 
-      switch(sut_flag){
-        
-        case 0:
-          if (yukseklik > 50) { // kalkis
-            setBit(0);
-            sut_flag++;
-          }
-          break;
-        
-        case 1:
-          if (ivme < 0) { //burnout
-            setBit(1);
-            sut_flag++;
-          }
-          break;
-        
-        case 2:
-          if (yukseklikoldold > yukseklik) { // apogee
-            setBit(4);
-            digitalWrite(SURUKLENME_PARASUT_PIN, HIGH);
-            setBit(5);
-            sut_flag++;
-          }
-          break;
+    case 3:
+      parasut_tekrarla(0/* 0: Suruklenme parasutu, 1: Ana parasut */);
+      break;
 
-        case 3:
-          if ( yukseklik < 600) { // 600m
-            setBit(6);
-            setBit(7);
-            digitalWrite(ANA_PARASUT_PIN, HIGH);
-            sut_flag++;
-          }
-          break;
-      }
+    case 4:
+      parasut();
+      break;
 
+    case 5:
+      alcalma();
+      parasut_tekrarla(1/*;Ana parasut icin*/);
       break;
   }
   esp_task_wdt_reset(); // watchdog'u besle

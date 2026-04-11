@@ -27,15 +27,11 @@
 #define MOSI_PIN 14
 #define MISO_PIN 21
 
-void switch_case();
-
-
 #pragma region lora
 
 void call_lora();
 //void lora_counter();
 
-extern HardwareSerial  RS232Serial;
 extern HardwareSerial  SerialAT;
 extern LoRa_E32        e32ttl;
 extern HardwareSerial  gpsSW;
@@ -67,23 +63,6 @@ struct Payload {
 
 extern Payload p;
 
-#pragma pack(push,1)
-struct Sut {
-  uint8_t id;
-  float   irtifa;
-  float   basinc;
-  float   ivmex;
-  float   ivmey;
-  float   ivmez;
-  float   acix;
-  float   aciy;
-  float   aciz;
-  uint8_t checksum;
-  uint8_t c1;
-  uint8_t c2;
-};
-#pragma pack(pop)
-
 void kalkis();
 void burnout();
 void apogee();
@@ -102,44 +81,10 @@ extern float son_ortalama;
 
 void lora_loop();
 
-void switch_case();
-void switch_flag();
-
-
-#define BUFFER_SIZE 256
-extern uint8_t fifoBuffer[];
-extern uint8_t fifoHead;
-extern uint8_t fifoTail;
-void fifoPush(uint8_t b);
-bool fifoPop(uint8_t &b);
-uint8_t fifoAvailable();
-void parseFifo();
-
-void setBit(uint8_t n);
-
-extern float sut_yukseklik;
-extern float sut_ivme;
-
-extern uint8_t sut_flag;
-
 extern float yukseklikoldold;
 extern float yukseklikold;
 
-extern uint8_t header[];
-void checkFifoHeader();
-
-extern volatile uint8_t scenario;
-
-typedef union{
-    float           sayi;
-    unsigned char   array[4];
-}byte_donustur;
-
-extern unsigned char sit_paket[36];
 extern Adafruit_BMP280 bmp;
-
-void sit();
-void sut();
 
 #pragma region externs
 //flag
