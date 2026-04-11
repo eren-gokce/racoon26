@@ -74,12 +74,12 @@ void setup() {
   
   devStatus = mpu.dmpInitialize();
   if (devStatus == 0) {
-    mpu.setXAccelOffset(-1600);
-    mpu.setYAccelOffset(-2892);
-    mpu.setZAccelOffset(1050);
-    mpu.setXGyroOffset(138);
-    mpu.setYGyroOffset(-17);
-    mpu.setZGyroOffset(25);
+    mpu.setXAccelOffset(269);
+    mpu.setYAccelOffset(-195);
+    mpu.setZAccelOffset(1140);
+    mpu.setXGyroOffset(27);
+    mpu.setYGyroOffset(10);
+    mpu.setZGyroOffset(-7);
 
     mpu.PrintActiveOffsets();
     

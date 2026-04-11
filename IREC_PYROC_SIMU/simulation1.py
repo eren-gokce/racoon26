@@ -259,4 +259,4 @@ plt.savefig(filename, dpi=150)
 print(f"Saved: {filename}")
 plt.show()
 
-test_flight.plots.all()
+# test_flight.plots.all()

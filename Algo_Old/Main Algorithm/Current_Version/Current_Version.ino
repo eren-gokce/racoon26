@@ -22,7 +22,7 @@
 
 unsigned long lora_timer;
 
-#define INTERRUPT_PIN 2
+#define INTERRUPT_PIN 45
 
 // #define SWITCH_PIN 35 // flag icin switch
 
@@ -286,8 +286,12 @@ void setup() {
   
   devStatus = mpu.dmpInitialize();
   if (devStatus == 0) {
-    mpu.CalibrateAccel(6);
-    mpu.CalibrateGyro(6);
+    mpu.setXAccelOffset(269);
+    mpu.setYAccelOffset(-195);
+    mpu.setZAccelOffset(1140);
+    mpu.setXGyroOffset(27);
+    mpu.setYGyroOffset(10);
+    mpu.setZGyroOffset(-7);
     mpu.PrintActiveOffsets();
     
     mpu.setDMPEnabled(true);
