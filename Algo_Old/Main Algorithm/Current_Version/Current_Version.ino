@@ -35,6 +35,24 @@ TinyGPSPlus     gps;
 Adafruit_BMP280 bmp(&Wire1);
 MPU6050 mpu;
 
+#pragma region dual_core
+
+data shared_data;
+SemaphoreHandle_t dataLock;
+
+void core0Task(void * pvParameters) {
+  // Core 0 için özel setup kodları (varsa) buraya yazılabilir.
+  // LoRa.begin() veya Serial2.begin() buraya da konabilir, setup'a da.
+  
+  for(;;) { // Sonsuz döngü
+    loopCore0(); // Senin fonksiyonunu çağırır
+    // Eğer loopCore0 içinde hiç delay yoksa, burası işlemciyi kurtarır.
+    vTaskDelay(200); 
+  }
+}
+
+#pragma endregion
+
 #pragma region timer starts timer after 10s and yukseklik
 #include <Ticker.h>
 void first_flag_function(){
@@ -221,6 +239,21 @@ void setup() {
   e32ttl.begin(); // lora
   SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, CS_PIN); // sd kart
 
+  #pragma region dual_core
+  dataLock = xSemaphoreCreateMutex();
+
+  xTaskCreatePinnedToCore(
+    core0Task,   /* Arka plan fonksiyonu */
+    "Core0_Isi", /* Görev adı */
+    10000,       /* RAM miktarı (Stack size) */
+    NULL,        /* Parametre */
+    1,           /* Öncelik (1=Düşük, PID etkilenmesin) */
+    NULL,        /* Handle */
+    0            /* ---> CORE 0 <--- */
+  );
+
+  #pragma endregion
+
   if (!SD.begin(CS_PIN)) {
     Serial.println("SD kart başlatılamadı!");
     SD_status = false;
@@ -399,6 +432,8 @@ void loop() {
   Serial.print("Yaw (°): "); Serial.print(yawDeg, 2);
   Serial.print(" | Pitch (°): "); Serial.print(pitchDeg, 2);
   Serial.print(" | Roll (°): "); Serial.println(rollDeg, 2);
+  Serial.print("core: "); Serial.println(xPortGetCoreID());
+
 
   millis_counter = millis() - millis_saved;
 
@@ -443,4 +478,38 @@ void loop() {
       break;
   }
   esp_task_wdt_reset(); // watchdog'u besle
+}
+
+void loopCore0() {
+  
+  // veri gonderilecekVeri; // Yerel kopya
+
+    // // --- VERİ AKTARIMI (YAZMA) ---
+  // // Kilidi al ve veriyi kutuya koy
+  // if (xSemaphoreTake(veriKilidi, (TickType_t)5) == pdTRUE) {
+  //   paylasilanVeri.a = hesaplanan_a;
+  //   // paylasilanVeri.ivme = ...
+  //   xSemaphoreGive(veriKilidi);
+  // }
+
+  // // --- VERİ OKUMA ---
+  // // Kilidi al ve kutudan veriyi kopyala
+  // if (xSemaphoreTake(veriKilidi, (TickType_t)5) == pdTRUE) {
+  //   memcpy(&gonderilecekVeri, &paylasilanVeri, sizeof(veri));
+  //   xSemaphoreGive(veriKilidi);
+  // }
+
+  // // --- LORA GÖNDERİMİ (Burada özgürsün) ---
+  // // LoRa işlemleri 50-100ms sürse bile sorun değil.
+  // // Serial2.print(...) veya LoRa.print(...)
+  
+  // Serial.print("[Core 0] Gonderilen Aci: ");
+  // Serial.println(gonderilecekVeri.a);
+  
+  Serial.print("for 0th core: "); Serial.println(xPortGetCoreID());
+
+
+  // Telemetri hızı (Örn: 100ms)
+  // BURAYA DİKKAT: Core 0'da da mutlaka minik bir delay olmalı!
+  vTaskDelay(500 / portTICK_PERIOD_MS);
 }

@@ -11,6 +11,8 @@
 #include <TinyGPS++.h>
 #include <SPI.h>
 #include <SD.h>
+#include <Arduino.h>
+#include "freertos/semphr.h"
 
 #define SURUKLENME_PARASUT_PIN 19
 #define ANA_PARASUT_PIN 38
@@ -26,6 +28,22 @@
 #define SCK_PIN  13
 #define MOSI_PIN 14
 #define MISO_PIN 21
+
+#pragma region dual_core
+
+void loopCore0(); // Senin yazacağın LoRa döngüsü
+void core0Task(void * pvParameters); // Arka plan işçisi (Task Wrapper)
+
+struct data {
+  float a;
+  float b;
+  int c;
+};
+
+extern data shared_data;
+extern SemaphoreHandle_t dataLock;
+
+#pragma endregion
 
 #pragma region lora
 
