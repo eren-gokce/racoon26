@@ -47,9 +47,30 @@ void core0Task(void * pvParameters) {
   for(;;) { // Sonsuz döngü
     loopCore0(); // Senin fonksiyonunu çağırır
     // Eğer loopCore0 içinde hiç delay yoksa, burası işlemciyi kurtarır.
-    vTaskDelay(200); 
+    vTaskDelay(1); 
   }
 }
+
+#pragma endregion
+
+#pragma region PID
+
+#define SERVO_PIN 38
+
+// --- PID PARAMETRELERİ (Tuning Gerektirir) ---
+float Kp = 1.5;   // Oransal çarpan (Hızlı tepki)
+float Kd = 0.7;   // Türev çarpan (Sönümleme)
+float Ki = 0.05;  // Integral çarpan (Hata birikimi)
+
+float rollError, lastRollError, rollIntegral, rollDerivative;
+float setPoint = 0; // Hedef: 0 derece roll
+float pidOutput = 0;
+
+// --- ZAMANLAMA ---
+unsigned long lastTime;
+const int sampleTime = 120; // 10ms = 100Hz döngü hızı
+
+Servo rollServo;
 
 #pragma endregion
 
@@ -254,6 +275,14 @@ void setup() {
 
   #pragma endregion
 
+  #pragma region PID setup
+
+  // Servo kurulumu
+  rollServo.attach(SERVO_PIN);
+  rollServo.write(90); // Başlangıçta kanatçıkları nötrle (90 derece)
+
+  #pragma endregion
+
   if (!SD.begin(CS_PIN)) {
     Serial.println("SD kart başlatılamadı!");
     SD_status = false;
@@ -354,6 +383,8 @@ void loop() {
   // MPU6050'dan verileri oku (sadece vertical ivme için)
   if (mpu.dmpGetCurrentFIFOPacket(FIFOBuffer)) { 
     mpu.dmpGetQuaternion(&q, FIFOBuffer);
+
+    #pragma region IMU Rotation
     // --- YAZILIMSAL SENSÖR DÖNDÜRME İŞLEMİ BAŞLANGICI ---
     // Quaternion değerlerini geçici değişkenlere alıyoruz
     float qw = q.w;
@@ -388,6 +419,8 @@ void loop() {
     // Not: Eğer yönler tam tersi çıkarsa (90 yerine -90 gerekiyorsa), 
     // formüllerdeki eksi (-) ve artı (+) işaretlerinin yerlerini değiştirin.
     // --- YAZILIMSAL DÖNDÜRME İŞLEMİ BİTİŞİ ---
+    #pragma endregion
+
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity); // Bu satır eklendi, böylece ypr güncellenir.
   }
@@ -437,6 +470,38 @@ void loop() {
 
   millis_counter = millis() - millis_saved;
 
+  // --- PID HESAPLAMA DÖNGÜSÜ ---
+  unsigned long now = millis();
+  float dt = (float)(now - lastTime) / 1000.0;
+
+  if (dt >= (float)sampleTime / 1000.0) {
+    // 1. Hata hesabı
+    rollError = setPoint - rollDeg;
+
+    // 2. Integral hesabı (Rüzgar vb. etkiler için)
+    rollIntegral += rollError * dt;
+    // Integral Windup koruması (Limit koymak iyidir)
+    rollIntegral = constrain(rollIntegral, -20, 20);
+
+    // 3. Türev hesabı (Hız değişimi)
+    rollDerivative = (rollError - lastRollError) / dt;
+
+    // 4. PID Çıkışı
+    pidOutput = (Kp * rollError) + (Ki * rollIntegral) + (Kd * rollDerivative);
+
+    // 5. Servoya Uygula
+    // Servonun orta noktası 90'dır. PID çıkışını üzerine ekliyoruz.
+    int servoTarget = 90 + pidOutput;
+    servoTarget = constrain(servoTarget, 45, 135); // def 45,135 // Servonun mekanik limiti
+    
+    rollServo.write(servoTarget);
+
+    // Değerleri güncelle
+    lastRollError = rollError;
+    lastTime = now;
+
+
+
   // if (switch_state == HIGH){
   //   Serial.print("switch is high and eeprom value is ");
   //   int asd = EEPROM.read(0); // 0. byte'tan oku
@@ -446,6 +511,32 @@ void loop() {
   // else if(switch_state == LOW){
   //   Serial.println("switch is low");
   // }
+
+  // --- VERİ AKTARIMI (YAZMA) ---
+  // Kilidi al ve veriyi kutuya koy
+  if (xSemaphoreTake(dataLock, (TickType_t)5) == pdTRUE) {
+
+    p.baroAlt = yukseklik;
+    p.accelX  = accel_x;
+    p.accelY  = accel_y;
+    p.accelZ  = ivme;
+    p.speed   = hiz;
+    p.angle;
+
+    xSemaphoreGive(dataLock);
+  }
+
+  esp_task_wdt_reset(); // watchdog'u besle
+}
+
+void loopCore0() {
+  
+  // --- VERİ OKUMA ---
+  // Kilidi al ve kutudan veriyi kopyala
+  if (xSemaphoreTake(dataLock, (TickType_t)5) == pdTRUE) {
+    memcpy(&s, &p, sizeof(Payload));
+    xSemaphoreGive(dataLock);
+  }
 
   call_lora();
 
@@ -477,39 +568,8 @@ void loop() {
       parasut_tekrarla(1/*;Ana parasut icin*/);
       break;
   }
-  esp_task_wdt_reset(); // watchdog'u besle
-}
-
-void loopCore0() {
-  
-  // veri gonderilecekVeri; // Yerel kopya
-
-    // // --- VERİ AKTARIMI (YAZMA) ---
-  // // Kilidi al ve veriyi kutuya koy
-  // if (xSemaphoreTake(veriKilidi, (TickType_t)5) == pdTRUE) {
-  //   paylasilanVeri.a = hesaplanan_a;
-  //   // paylasilanVeri.ivme = ...
-  //   xSemaphoreGive(veriKilidi);
-  // }
-
-  // // --- VERİ OKUMA ---
-  // // Kilidi al ve kutudan veriyi kopyala
-  // if (xSemaphoreTake(veriKilidi, (TickType_t)5) == pdTRUE) {
-  //   memcpy(&gonderilecekVeri, &paylasilanVeri, sizeof(veri));
-  //   xSemaphoreGive(veriKilidi);
-  // }
-
-  // // --- LORA GÖNDERİMİ (Burada özgürsün) ---
-  // // LoRa işlemleri 50-100ms sürse bile sorun değil.
-  // // Serial2.print(...) veya LoRa.print(...)
-  
-  // Serial.print("[Core 0] Gonderilen Aci: ");
-  // Serial.println(gonderilecekVeri.a);
   
   Serial.print("for 0th core: "); Serial.println(xPortGetCoreID());
 
-
-  // Telemetri hızı (Örn: 100ms)
-  // BURAYA DİKKAT: Core 0'da da mutlaka minik bir delay olmalı!
-  vTaskDelay(500 / portTICK_PERIOD_MS);
+  vTaskDelay(50 / portTICK_PERIOD_MS); // Caution!! Core0 always needs to have a vTaskDelay
 }

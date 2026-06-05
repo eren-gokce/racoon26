@@ -9,34 +9,21 @@ HardwareSerial IletiSerial(1);
 #define LORA_RX 16
 #define LORA_TX 17
 
-#define ILETI_RX 18
-#define ILETI_TX 19
-
 #pragma pack(push,1)
-struct Payload {
+struct Rocket {
   uint8_t id;
   float   baroAlt;
   float   gpsAlt;
   float   lat;
   float   lon;
-  float   pressure;
-  float   temp;
-  float   humidity;
+  float   accelX;
+  float   accelY;
+  float   accelZ;
+  float   speed; // ek benim istedigim bilgi
+  uint8_t status;
   uint8_t crc;
 };
 #pragma pack(pop)
-#pragma pack(push,1)
-struct Ileti {
-  float   baroAlt;
-  float   gpsAlt;
-  float   lat;
-  float   lon;
-  float   pressure;
-  float   temp;
-  float   humidity;
-};
-#pragma pack(pop)
-
 
 uint8_t calculateCRC8(const uint8_t* data, size_t len) {
   uint8_t crc = 0;
@@ -79,41 +66,32 @@ uint8_t fifoAvailable() {  // fifo veri uzunlugu
 }
 
 void parseFifo() {
-  if (fifoAvailable() >= sizeof(Payload)) {
+  if (fifoAvailable() >= sizeof(Rocket)) {
     uint8_t startByte;
     startByte = fifoBuffer[fifoTail];
 
-    if (startByte == 131 && fifoAvailable() >= sizeof(Payload)) {
-      // Payload mesajı
-      Payload p;
-      Ileti i;
-      for (int i = 0; i < sizeof(Payload); i++) {
-        fifoPop(((uint8_t*)&p)[i]);  // baştan itibaren oku
+    if (startByte == 151 && fifoAvailable() >= sizeof(Rocket)) {
+      // Rocket mesajı
+      Rocket r;
+      for (int i = 0; i < sizeof(Rocket); i++) {
+        fifoPop(((uint8_t*)&r)[i]);
       }
+      
+      uint8_t calc_crc = calculateCRC8((uint8_t*)&r, sizeof(Rocket) - sizeof(r.crc));
 
-      uint8_t calc_crc = calculateCRC8((uint8_t*)&p, sizeof(Payload) - sizeof(p.crc));
-
-      if(calc_crc == p.crc){
-        //Serial.print("  id: ");        Serial.println(p.id);
-        Serial.print("  BaroAlt: ");   Serial.println(p.baroAlt);
-        Serial.print("  GPSAlt: ");    Serial.println(p.gpsAlt);
-        Serial.print("  Lat: ");       Serial.println(p.lat,6);
-        Serial.print("  Lon: ");       Serial.println(p.lon,6);
-        Serial.print("  pressure: ");       Serial.println(p.pressure);
-        Serial.print("  temp: ");       Serial.println(p.temp);
-        Serial.print("  humidity: ");       Serial.println(p.humidity);
-
-        i.baroAlt   = p.baroAlt;
-        i.gpsAlt    = p.gpsAlt;
-        i.lat       = p.lat;
-        i.lon       = p.lon;
-        i.pressure  = p.pressure;
-        i.temp      = p.temp;
-        i.humidity  = p.humidity;
-
+      if(calc_crc == r.crc){
+        // Serial.print("  id: ");        Serial.println(r.id);
+        Serial.print("  BaroAlt: ");   Serial.println(r.baroAlt);
+        Serial.print("  GPSAlt: ");    Serial.println(r.gpsAlt);
+        Serial.print("  Lat: ");       Serial.println(r.lat,6);
+        Serial.print("  Lon: ");       Serial.println(r.lon,6);
+        Serial.print("  Accel X : ");  Serial.println(r.accelX,3);
+        Serial.print("  Accel Y : ");  Serial.println(r.accelY,3);
+        Serial.print("  Accel Z : ");  Serial.println(r.accelZ,3);
+        Serial.print("  Speed: ");     Serial.println(r.speed);
+        Serial.print("  Status: ");    Serial.println(r.status);
       }
-      IletiSerial.write((uint8_t*)&i, sizeof(Ileti));
-    }
+    } 
     else {
       // Geçerli mesaj başlangıcı değil, at
       uint8_t trash;
@@ -129,7 +107,6 @@ void parseFifo() {
   void setup() {
   Serial.begin(115200);
   SerialAT.begin(9600, SERIAL_8N1, LORA_RX, LORA_TX);
-  IletiSerial.begin(115200, SERIAL_8N1, ILETI_RX, ILETI_TX);
   while (!Serial);
   delay(100);
   Serial.println("\n🚀 RX: waiting for packets…");
@@ -138,9 +115,8 @@ void parseFifo() {
 void loop() {
   if (SerialAT.available()) {
     uint8_t b = SerialAT.read();
-    //Serial.print("RX: "); Serial.println(b);
+    // Serial.print("RX: "); Serial.println(b);
     fifoPush(b);
   }
-
   parseFifo();
 }

@@ -13,6 +13,8 @@
 #include <SD.h>
 #include <Arduino.h>
 #include "freertos/semphr.h"
+#include <ESP32Servo.h>
+
 
 #define SURUKLENME_PARASUT_PIN 19
 #define ANA_PARASUT_PIN 38
@@ -72,7 +74,8 @@ struct Payload {
   float   accelX;
   float   accelY;
   float   accelZ;
-  float   speed; // ek benim istedigim bilgi
+  float   speed;
+  float   angle;
   uint8_t status;
   uint8_t crc;
 };
@@ -80,6 +83,7 @@ struct Payload {
 #pragma endregion
 
 extern Payload p;
+extern Payload s;
 
 void kalkis();
 void burnout();

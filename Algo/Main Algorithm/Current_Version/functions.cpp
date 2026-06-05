@@ -43,7 +43,7 @@ float onceki_ortalama;
 float son_ortalama;
 
 void kalkis(){
-  float avarage = avarage_in_given_time(500 , hiz);
+  float avarage = avarage_in_given_time(500 , s.speed);
   if(avarage > 3){
     Serial.println("Roket kalkisa gecti");
     Serial.println("Roket kalkisa gecti");
@@ -55,9 +55,10 @@ void kalkis(){
 }
 
 void burnout(){
-  float avarage = avarage_in_given_time(500 , ivme);
+  float avarage = avarage_in_given_time(500 , s.accelZ);
   Serial.print("   onceki ortalama"); Serial.println(onceki_ortalama);
-  if((onceki_ortalama - 3) < avarage && avarage < (onceki_ortalama + 3)){
+  // if((onceki_ortalama - 3) < avarage && avarage < (onceki_ortalama + 3)){
+    if (avarage < -5){
     Serial.println("burnout gecti");
     Serial.println("burnout gecti");
     Serial.println("burnout gecti");
@@ -69,8 +70,8 @@ void burnout(){
 }
 
 void apogee(){
-  float avarage = avarage_in_given_time(500 , hiz);
-  if(3 <= avarage && avarage <= 30 && avarage != 0){ // duzenlencek default(-21 < x < 30)
+  float avarage = avarage_in_given_time(1000 , s.speed);
+  if(avarage <= 15 && avarage != 0){ // duzenlencek default(-21 < x < 30)
     Serial.println("Roket apogee ulaştı");
     Serial.println("Roket apogee ulaştı");
     Serial.println("Roket apogee ulaştı");
@@ -112,8 +113,8 @@ void parasut_tekrarla(uint8_t x/* 0: Suruklenme parasutu, 1: Ana parasut */){
 }
 
 void parasut(){// zeminden yuksekligin hesaplanmasi lazim
-  float avarage = avarage_in_given_time(500 , yukseklik);
-  if (5 < avarage && avarage <80 && avarage != 0){ // de[erler degisecek denemek icin yapildi default (400 < x < 600)
+  float avarage = avarage_in_given_time(500 , s.baroAlt);
+  if (avarage < 400 && avarage != 0){ // de[erler degisecek denemek icin yapildi default (400 < x < 600)
     Serial.println("Roket 2. paraşüt aşamasına geçti");
     Serial.println("Roket 2. paraşüt aşamasına geçti");
     Serial.println("Roket 2. paraşüt aşamasına geçti");
@@ -127,8 +128,8 @@ void parasut(){// zeminden yuksekligin hesaplanmasi lazim
 }
 
 void alcalma(){
-  float avarage = avarage_in_given_time(2000, yukseklik);
-  if(-10 < avarage && avarage < 10 && avarage != 0){
+  float avarage = avarage_in_given_time(2000, s.baroAlt);
+  if(avarage < 10 && avarage != 0){
     Serial.println("Roket yere iniş yaptı");
     flag = 6;
     EEPROM.write(0, flag); //veriyi flaha yaz
@@ -143,19 +144,19 @@ void write_to_sd(){
       dataFile.print("<||");
       dataFile.print(millis());
       dataFile.print("||> <||");
-      dataFile.print(p.baroAlt); dataFile.print("|");
-      dataFile.print(p.gpsAlt);  dataFile.print("|");
+      dataFile.print(s.baroAlt); dataFile.print("|");
+      dataFile.print(s.gpsAlt);  dataFile.print("|");
       dataFile.print("|> <||");
-      dataFile.print(p.lat);     dataFile.print("|");
-      dataFile.print(p.lon);     dataFile.print("|");
+      dataFile.print(s.lat);     dataFile.print("|");
+      dataFile.print(s.lon);     dataFile.print("|");
       dataFile.print("|> <||");
-      dataFile.print(p.accelX);  dataFile.print("|");
-      dataFile.print(p.accelY);  dataFile.print("|");
-      dataFile.print(p.accelZ);  dataFile.print("|");
+      dataFile.print(s.accelX);  dataFile.print("|");
+      dataFile.print(s.accelY);  dataFile.print("|");
+      dataFile.print(s.accelZ);  dataFile.print("|");
       dataFile.print("|> <||");
-      dataFile.print(p.speed);   dataFile.print("|");
+      dataFile.print(s.speed);   dataFile.print("|");
       dataFile.print("|> <||");
-      dataFile.print(p.status);  dataFile.print("|");
+      dataFile.print(s.status);  dataFile.print("|");
       dataFile.println(flag);    dataFile.print("||>");
       dataFile.close();
 

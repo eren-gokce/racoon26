@@ -46,7 +46,8 @@ class PIDController:
 def impurity_torque(t):
     """Fluctuating roll disturbance between 0 and 1 N·m.
     Uses a squared sine so the value is always non-negative."""
-    return math.sin(math.pi * 0.5 * t) *2
+    # return math.sin(math.pi * 0.5 * t) *2
+    return t/100
     # #import random
     # if t <= 50 or t >= 500:
     #     # return round(random.uniform(0, 1), 4)

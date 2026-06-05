@@ -4,8 +4,8 @@
 
 #pragma region MPU6050
 
-#define MPU_SDA    22   // MPU6050 SDA → IO4
-#define MPU_SCL    23   // MPU6050 SCL → IO5
+#define MPU_SDA    9   // MPU6050 SDA → IO4
+#define MPU_SCL    10   // MPU6050 SCL → IO5
 #define INTERRUPT_PIN 2
 
 float ax;
@@ -42,12 +42,12 @@ void DMPDataReady() {
 
 #pragma region PID
 
-#define SERVO_PIN 18
+#define SERVO_PIN 38
 
 // --- PID PARAMETRELERİ (Tuning Gerektirir) ---
-float Kp = 2.0;   // Oransal çarpan (Hızlı tepki)
-float Ki = 0.01;  // Integral çarpan (Hata birikimi)
-float Kd = 1.2;   // Türev çarpan (Sönümleme)
+float Kp = 1.5;   // Oransal çarpan (Hızlı tepki)
+float Kd = 0.7;   // Türev çarpan (Sönümleme)
+float Ki = 0.05;  // Integral çarpan (Hata birikimi)
 
 float rollError, lastRollError, rollIntegral, rollDerivative;
 float setPoint = 0; // Hedef: 0 derece roll
@@ -154,7 +154,7 @@ void loop() {
     // 5. Servoya Uygula
     // Servonun orta noktası 90'dır. PID çıkışını üzerine ekliyoruz.
     int servoTarget = 90 + pidOutput;
-    servoTarget = constrain(servoTarget, 45, 135); // Servonun mekanik limiti
+    servoTarget = constrain(servoTarget, 45, 135); // def 45,135 // Servonun mekanik limiti
     
     rollServo.write(servoTarget);
 

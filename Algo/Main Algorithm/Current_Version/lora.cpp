@@ -10,6 +10,7 @@
 #include <SD.h>
 
 Payload p;
+Payload s;
 
 static uint8_t packetCounter = 0;
 
@@ -50,36 +51,35 @@ void lora_loop(){
     lastGpsAlt = gps.altitude.meters();
   }
 
-  // payload’u doldur
-  p.id  = 151;                 
-  p.baroAlt = yukseklik;
-  p.gpsAlt  = lastGpsAlt;
-  p.lat     = gps.location.isValid() ? gps.location.lat() : 0;
-  p.lon     = gps.location.isValid() ? gps.location.lng() : 0;
-  p.accelX  = accel_x;
-  p.accelY  = accel_y;
-  p.accelZ  = ivme;
-  p.speed   = hiz;
-  p.status  = status;  // teknofestin isteigi flagler yazilcak;
-  p.crc     = calculateCRC8((uint8_t*)&p, sizeof(Payload) - sizeof(p.crc));
+  s.id  = 151;                 
+  s.baroAlt = yukseklik;
+  s.gpsAlt  = lastGpsAlt;
+  s.lat     = gps.location.isValid() ? gps.location.lat() : 0;
+  s.lon     = gps.location.isValid() ? gps.location.lng() : 0;
+  s.accelX  = accel_x;
+  s.accelY  = accel_y;
+  s.accelZ  = ivme;
+  s.speed   = hiz;
+  s.status  = status;  //flagler yazilcak;
+  s.crc     = calculateCRC8((uint8_t*)&p, sizeof(Payload) - sizeof(s.crc));
 
   // ▶️▶️ Debug TX:
-  Serial.print("  id: ");   Serial.println(p.id);
+  Serial.print("  id: ");   Serial.println(s.id);
 
-  Serial.print("  BaroAlt: ");   Serial.println(p.baroAlt);
-  Serial.print("  GPSAlt: ");    Serial.println(p.gpsAlt);
+  Serial.print("  BaroAlt: ");   Serial.println(s.baroAlt);
+  Serial.print("  GPSAlt: ");    Serial.println(s.gpsAlt);
 
-  Serial.print("  Lat: ");       Serial.println(p.lat,6);
-  Serial.print("  Lon: ");       Serial.println(p.lon,6);
+  Serial.print("  Lat: ");       Serial.println(s.lat,6);
+  Serial.print("  Lon: ");       Serial.println(s.lon,6);
 
-  Serial.print("  Accel X : ");  Serial.print(p.accelX,3);
-  Serial.print("  Accel Y : ");  Serial.print(p.accelY,3);
-  Serial.print("  Accel Z : ");  Serial.println(p.accelZ,3);
+  Serial.print("  Accel X : ");  Serial.print(s.accelX,3);
+  Serial.print("  Accel Y : ");  Serial.print(s.accelY,3);
+  Serial.print("  Accel Z : ");  Serial.println(s.accelZ,3);
 
-  Serial.print("  Speed: ");       Serial.println(p.speed);
+  Serial.print("  Speed: ");       Serial.println(s.speed);
 
-  Serial.print("  Status: ");    Serial.println(p.status);
-  Serial.print("  CRC:  ");     Serial.println(p.crc);
+  Serial.print("  Status: ");    Serial.println(s.status);
+  Serial.print("  CRC:  ");     Serial.println(s.crc);
 
   // LoRa ile gönder
   ResponseStatus rs = e32ttl.sendFixedMessage(
