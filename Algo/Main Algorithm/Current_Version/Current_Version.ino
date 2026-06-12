@@ -28,7 +28,6 @@ volatile bool switch_state = LOW; // flag icin switch
 //diger nesneler
 HardwareSerial  SerialAT(2);
 LoRa_E32        e32ttl(&SerialAT);
-HardwareSerial  gpsSW(1);
 TinyGPSPlus     gps;
 
 // Sensör nesneleri
@@ -256,7 +255,7 @@ void setup() {
   Wire.begin(MPU_SDA, MPU_SCL);
   Wire1.begin(BMP_SDA, BMP_SCL);
   Wire.setClock(400000);
-  gpsSW.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+  Wiregps.begin(GPS_SDA, GPS_SCL);
   e32ttl.begin(); // lora
   SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, CS_PIN); // sd kart
 

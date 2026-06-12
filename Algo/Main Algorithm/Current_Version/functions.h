@@ -54,15 +54,13 @@ void call_lora();
 
 extern HardwareSerial  SerialAT;
 extern LoRa_E32        e32ttl;
-extern HardwareSerial  gpsSW;
 extern TinyGPSPlus     gps;
 
 
 #define LORA_RX     40
 #define LORA_TX     39
-#define GPS_RX_PIN  42
-#define GPS_TX_PIN  41
-#define GPS_BAUD    9600
+#define GPS_SDA  18
+#define GPS_SCL  17
 
 #pragma pack(push,1)
 struct Payload {
